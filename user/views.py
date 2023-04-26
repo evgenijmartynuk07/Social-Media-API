@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from user.models import UserProfile
+from user.permissions import IsOwnerOrReadOnly
 from user.serializers import UserSerializer, UserProfileSerializer, UserProfileDetailSerializer, \
     UserProfileCreateSerializer
 
@@ -27,24 +28,22 @@ class UserProfileViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsOwnerOrReadOnly,)
     queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
 
     def get_serializer_class(self):
         if self.action == "list":
             return UserProfileSerializer
 
-        if self.action == "retrieve":
+        if self.action in ["retrieve", "update"]:
             return UserProfileDetailSerializer
 
         if self.action == "create":
             return UserProfileCreateSerializer
-
-        # if self.action == "upload_image":
-        #     return MovieImageSerializer
 
         return UserProfileSerializer
 

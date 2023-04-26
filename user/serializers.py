@@ -27,6 +27,12 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ("email", "password", "first_name", "last_name",)
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -35,13 +41,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserProfileDetailSerializer(serializers.ModelSerializer):
-    first_name = UserSerializer(source="user.first_name", many=False, read_only=True)
-    last_name = UserSerializer(source="user.last_name", many=False, read_only=True)
-    email = UserSerializer(source="user.email", many=False, read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=False)
+    first_name = serializers.CharField(source="user.first_name", read_only=False)
+    last_name = serializers.CharField(source="user.last_name", read_only=False)
 
     class Meta:
         model = UserProfile
-        fields = ("first_name", "last_name", "email",)
+        fields = ("profile_picture", "bio", "website", "sex", "first_name", "last_name", "email", "phone_number")
+
+    def update(self, instance, validated_data):
+        profile = instance
+        user = profile.user
+
+        # Update user object if there's any data related to it
+        user_data = validated_data.pop("user", {})
+        if user_data:
+            user_serializer = UserUpdateSerializer(user, data=user_data, partial=True)
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
+
+        # Update profile object with the remaining validated data
+        for key, value in validated_data.items():
+            setattr(profile, key, value)
+        profile.save()
+
+        return profile
 
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):

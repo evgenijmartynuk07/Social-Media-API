@@ -1,14 +1,18 @@
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics
+from django.urls import reverse
 from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
+from drf_spectacular.types import OpenApiTypes
+from user.exceptions import ObjectAlreadyExists
 from user.models import UserProfile
 from user.permissions import IsOwnerOrReadOnly
 from user.serializers import UserSerializer, UserProfileSerializer, UserProfileDetailSerializer, \
-    UserProfileCreateSerializer
+    UserProfileCreateSerializer, UserProfileListSerializer
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -26,55 +30,69 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
 class UserProfileViewSet(
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
+
 ):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsOwnerOrReadOnly,)
     queryset = UserProfile.objects.all()
 
-    def get_serializer_class(self):
-        if self.action == "list":
-            return UserProfileSerializer
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="create-profile",
+        permission_classes=[IsAuthenticated],
+    )
+    def create_profile(self, request):
+        if UserProfile.objects.filter(user=request.user).exists():
+            raise ObjectAlreadyExists()
 
-        if self.action in ["retrieve", "update"]:
+        create = mixins.CreateModelMixin()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        create.perform_create(serializer)
+        headers = create.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def get_serializer_class(self):
+        if self.action in ("list",):
+            return UserProfileListSerializer
+
+        if self.action in ("retrieve", "update"):
             return UserProfileDetailSerializer
 
-        if self.action == "create":
+        if self.action == "create_profile":
             return UserProfileCreateSerializer
 
         return UserProfileSerializer
 
-    def create(self, request, *args, **kwargs):
-        user_profile = UserProfile.objects.filter(user=request.user).first()
-        if user_profile:
-            serializer = self.get_serializer(instance=user_profile, data=request.data)
-        else:
-            serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "first_name",
+                type={"type": "list", "items": {"type": "str"}},
+                description="Filter by first_name id (ex. ?genres=2,5)",
+            ),
 
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-    # @action(
-    #     methods=["POST"],
-    #     detail=True,
-    #     url_path="upload-image",
-    #     permission_classes=[IsAdminUser],
-    # )
-    # def upload_image(self, request, pk=None):
-    #     """Endpoint for uploading image to specific movie"""
-    #     movie = self.get_object()
-    #     serializer = self.get_serializer(movie, data=request.data)
-    #
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "first_name",
+                type=OpenApiTypes.STR,
+                description="Filter by first_name id (ex. ?first_name=John&first_name=Jane)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 

@@ -40,6 +40,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class UserProfileListSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ("id", "first_name", "last_name", "profile_picture", "website", "phone_number", "sex",)
+        read_only_fields = ("first_name", "last_name", "profile_picture", "website", "phone_number", "sex",)
+
+
 class UserProfileDetailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=False)
     first_name = serializers.CharField(source="user.first_name", read_only=False)
@@ -69,10 +79,11 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
 
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
+    user = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ("profile_picture", "bio", "website", "phone_number", "sex")
+        fields = ("profile_picture", "bio", "website", "phone_number", "sex", "user")
 
     def create(self, validated_data):
         user = self.context["request"].user

@@ -89,6 +89,11 @@ class UserProfileViewSet(
                 type=OpenApiTypes.STR,
                 description="Filter by first_name id (ex. ?first_name=John&first_name=Jane)",
             ),
+            OpenApiParameter(
+                "last_name",
+                type=OpenApiTypes.STR,
+                description="Filter by last_name id (ex. ?last_name=John&last_name=Jane)",
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):

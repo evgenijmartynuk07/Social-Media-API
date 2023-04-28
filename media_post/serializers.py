@@ -10,7 +10,7 @@ class PostListCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ("id", "text_content", "media_attachment", "author")
+        fields = ("id", "hashtag", "text_content", "media_attachment", "author")
 
     def create(self, validated_data):
         user = self.context["request"].user.userprofile

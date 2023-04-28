@@ -42,3 +42,15 @@ class PostViewSet(
         if self.action in ("list", "post"):
             return PostListCreateSerializer
         return PostDetailSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "hashtag",
+                type=OpenApiTypes.STR,
+                description="Filter by hashtag(ex. ?hashtag=home)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

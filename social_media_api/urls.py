@@ -26,14 +26,6 @@ from drf_spectacular.views import (
 from rest_framework import routers
 
 
-from user.views import UserProfileViewSet
-
-
-router = routers.DefaultRouter()
-
-router.register("userprofile", UserProfileViewSet)
-
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/user/", include("user.urls", namespace="user")),
@@ -48,7 +40,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-    path("", include(router.urls)),
+    # path("", include(router.urls)),
     # path("__debug__/", include("debug_toolbar.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

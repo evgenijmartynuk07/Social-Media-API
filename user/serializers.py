@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
-from user.models import UserProfile
+from user.models import UserProfile, Follow
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -89,3 +89,49 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         validated_data["user"] = user
         return super().create(validated_data)
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    following = serializers.PrimaryKeyRelatedField(queryset=UserProfile.objects.all(), write_only=True, many=True)
+
+    class Meta:
+        model = Follow
+        fields = ("following", "id", "user")
+
+    def get_user(self, obj) -> list[dict]:
+        queryset = obj.following.all()
+        data = [
+            {
+                'first_name': user.user.first_name,
+                "last_name": user.user.last_name,
+                "email": user.user.email,
+            }
+            for user in queryset
+        ]
+        return data
+
+    def create(self, validated_data):
+        user = self.context["request"].user.userprofile
+        validated_data["user"] = user
+        return super().create(validated_data)
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Follow
+        fields = ("id", "user")
+
+    def get_user(self, obj) -> list[dict]:
+        queryset = obj.follower.all()
+        data = [
+            {
+                'first_name': user.user.first_name,
+                "last_name": user.user.last_name,
+                "email": user.user.email,
+            }
+            for user in queryset
+        ]
+        return data

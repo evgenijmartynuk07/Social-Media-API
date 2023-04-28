@@ -8,11 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.types import OpenApiTypes
-from user.exceptions import ObjectAlreadyExists
-from user.models import UserProfile
+from user.exceptions import ObjectAlreadyExists, AlreadySubscribeExists
+from user.models import UserProfile, Follow
 from user.permissions import IsOwnerOrReadOnly
 from user.serializers import UserSerializer, UserProfileSerializer, UserProfileDetailSerializer, \
-    UserProfileCreateSerializer, UserProfileListSerializer
+    UserProfileCreateSerializer, UserProfileListSerializer, FollowingSerializer, FollowerSerializer
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -100,11 +100,45 @@ class UserProfileViewSet(
         return super().list(request, *args, **kwargs)
 
 
+class FollowingViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Follow.objects.prefetch_related("following")
+    serializer_class = FollowingSerializer
+
+    def get_queryset(self):
+        queryset = Follow.objects.filter(user__user_id=self.request.user.id).exclude(following=None)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        following_user = request.data.get("following")
+        if Follow.objects.filter(following=following_user).exists():
+            raise AlreadySubscribeExists()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+class FollowerViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Follow.objects.prefetch_related("follower")
+    serializer_class = FollowerSerializer
 
-
-
+    def get_queryset(self):
+        queryset = Follow.objects.filter(user__user_id=self.request.user.id).exclude(follower=None)
+        return queryset
 
 
 

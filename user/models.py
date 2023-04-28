@@ -75,4 +75,12 @@ class UserProfile(models.Model):
     sex = models.CharField(max_length=12, choices=SEX_FIELD)
 
     def __str__(self):
-        return f"{self.user.username}\'s Profile"
+        return f"email: {self.user.email}\'s Profile"
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    follower = models.ManyToManyField(UserProfile, related_name="following", null=True, blank=True)
+    following = models.ManyToManyField(UserProfile, related_name="followers", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+

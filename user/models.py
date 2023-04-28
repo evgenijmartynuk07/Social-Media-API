@@ -80,7 +80,7 @@ class UserProfile(models.Model):
 
 class Follow(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    follower = models.ManyToManyField(UserProfile, related_name="following", null=True, blank=True)
-    following = models.ManyToManyField(UserProfile, related_name="followers", null=True, blank=True)
+    follower = models.ManyToManyField(UserProfile, related_name="following", blank=True)
+    following = models.ManyToManyField(UserProfile, related_name="followers", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

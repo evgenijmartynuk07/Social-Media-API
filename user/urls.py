@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -6,7 +6,12 @@ from rest_framework_simplejwt.views import (
 )
 
 from rest_framework import routers
-from user.views import CreateUserView, ManageUserView, FollowingViewSet, FollowerViewSet
+from user.views import (
+    CreateUserView,
+    ManageUserView,
+    FollowingViewSet,
+    FollowerViewSet,
+)
 
 from user.views import UserProfileViewSet
 

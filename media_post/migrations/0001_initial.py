@@ -26,7 +26,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("text_content", models.TextField(blank=True, max_length=1000)),
+                (
+                    "text_content",
+                    models.TextField(blank=True, max_length=1000),
+                ),
                 (
                     "media_attachment",
                     models.ImageField(

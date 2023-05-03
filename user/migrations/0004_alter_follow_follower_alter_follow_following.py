@@ -14,14 +14,20 @@ class Migration(migrations.Migration):
             model_name="follow",
             name="follower",
             field=models.ManyToManyField(
-                blank=True, null=True, related_name="following", to="user.userprofile"
+                blank=True,
+                null=True,
+                related_name="following",
+                to="user.userprofile",
             ),
         ),
         migrations.AlterField(
             model_name="follow",
             name="following",
             field=models.ManyToManyField(
-                blank=True, null=True, related_name="followers", to="user.userprofile"
+                blank=True,
+                null=True,
+                related_name="followers",
+                to="user.userprofile",
             ),
         ),
     ]

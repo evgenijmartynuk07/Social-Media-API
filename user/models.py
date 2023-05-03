@@ -68,19 +68,24 @@ class UserProfile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to=profile_image_file_path, blank=True, null=True)
+    profile_picture = models.ImageField(
+        upload_to=profile_image_file_path, blank=True, null=True
+    )
     bio = models.TextField(max_length=500, blank=True, null=True)
     website = models.URLField(blank=True, null=True, default="URL not defined")
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     sex = models.CharField(max_length=12, choices=SEX_FIELD)
 
     def __str__(self):
-        return f"email: {self.user.email}\'s Profile"
+        return f"email: {self.user.email}'s Profile"
 
 
 class Follow(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    follower = models.ManyToManyField(UserProfile, related_name="following", blank=True)
-    following = models.ManyToManyField(UserProfile, related_name="followers", blank=True)
+    follower = models.ManyToManyField(
+        UserProfile, related_name="following", blank=True
+    )
+    following = models.ManyToManyField(
+        UserProfile, related_name="followers", blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-

@@ -13,6 +13,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="userprofile",
             name="website",
-            field=models.URLField(blank=True, default="URL not defined", null=True),
+            field=models.URLField(
+                blank=True, default="URL not defined", null=True
+            ),
         ),
     ]

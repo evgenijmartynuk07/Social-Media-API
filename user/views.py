@@ -1,7 +1,5 @@
-from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics
-from django.urls import reverse
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -11,8 +9,15 @@ from drf_spectacular.types import OpenApiTypes
 from user.exceptions import ObjectAlreadyExists, AlreadySubscribeExists
 from user.models import UserProfile, Follow
 from user.permissions import IsOwnerOrReadOnly
-from user.serializers import UserSerializer, UserProfileSerializer, UserProfileDetailSerializer, \
-    UserProfileCreateSerializer, UserProfileListSerializer, FollowingSerializer, FollowerSerializer
+from user.serializers import (
+    UserSerializer,
+    UserProfileSerializer,
+    UserProfileDetailSerializer,
+    UserProfileCreateSerializer,
+    UserProfileListSerializer,
+    FollowingSerializer,
+    FollowerSerializer,
+)
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -34,7 +39,6 @@ class UserProfileViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
-
 ):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsOwnerOrReadOnly,)
@@ -47,6 +51,7 @@ class UserProfileViewSet(
         permission_classes=[IsAuthenticated],
     )
     def create_profile(self, request):
+        """U can Create your Profile page"""
         if UserProfile.objects.filter(user=request.user).exists():
             raise ObjectAlreadyExists()
 
@@ -56,7 +61,9 @@ class UserProfileViewSet(
         create.perform_create(serializer)
         headers = create.get_success_headers(serializer.data)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def get_serializer_class(self):
         if self.action in ("list",):
@@ -77,7 +84,6 @@ class UserProfileViewSet(
                 type={"type": "list", "items": {"type": "str"}},
                 description="Filter by first_name id (ex. ?genres=2,5)",
             ),
-
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -88,12 +94,14 @@ class UserProfileViewSet(
             OpenApiParameter(
                 "first_name",
                 type=OpenApiTypes.STR,
-                description="Filter by first_name id (ex. ?first_name=John&first_name=Jane)",
+                description="Filter by first_name id "
+                            "(ex. ?first_name=John&first_name=Jane)",
             ),
             OpenApiParameter(
                 "last_name",
                 type=OpenApiTypes.STR,
-                description="Filter by last_name id (ex. ?last_name=John&last_name=Jane)",
+                description="Filter by last_name id "
+                            "(ex. ?last_name=John&last_name=Jane)",
             ),
         ]
     )
@@ -113,7 +121,9 @@ class FollowingViewSet(
     serializer_class = FollowingSerializer
 
     def get_queryset(self):
-        queryset = Follow.objects.filter(user__user_id=self.request.user.id).exclude(following=None)
+        queryset = self.queryset.filter(
+            user__user_id=self.request.user.id
+        ).exclude(following=None)
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -125,7 +135,9 @@ class FollowingViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class FollowerViewSet(
@@ -138,12 +150,7 @@ class FollowerViewSet(
     serializer_class = FollowerSerializer
 
     def get_queryset(self):
-        queryset = Follow.objects.filter(user__user_id=self.request.user.id).exclude(follower=None)
+        queryset = self.queryset.filter(
+            user__user_id=self.request.user.id
+        ).exclude(follower=None)
         return queryset
-
-
-
-
-
-
-

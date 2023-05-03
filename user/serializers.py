@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import transaction
 from rest_framework import serializers
 
 from user.models import UserProfile, Follow
@@ -28,34 +27,66 @@ class UserSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("email", "password", "first_name", "last_name",)
+        fields = (
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+        )
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = UserProfile
         fields = "__all__"
 
 
 class UserProfileListSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    first_name = serializers.CharField(
+        source="user.first_name", read_only=True
+    )
     last_name = serializers.CharField(source="user.last_name", read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ("id", "first_name", "last_name", "profile_picture", "website", "phone_number", "sex",)
-        read_only_fields = ("first_name", "last_name", "profile_picture", "website", "phone_number", "sex",)
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "profile_picture",
+            "website",
+            "phone_number",
+            "sex",
+        )
+        read_only_fields = (
+            "first_name",
+            "last_name",
+            "profile_picture",
+            "website",
+            "phone_number",
+            "sex",
+        )
 
 
 class UserProfileDetailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=False)
-    first_name = serializers.CharField(source="user.first_name", read_only=False)
+    first_name = serializers.CharField(
+        source="user.first_name", read_only=False
+    )
     last_name = serializers.CharField(source="user.last_name", read_only=False)
 
     class Meta:
         model = UserProfile
-        fields = ("profile_picture", "bio", "website", "sex", "first_name", "last_name", "email", "phone_number")
+        fields = (
+            "profile_picture",
+            "bio",
+            "website",
+            "sex",
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+        )
 
     def update(self, instance, validated_data):
         profile = instance
@@ -64,7 +95,9 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
         # Update user object if there's any data related to it
         user_data = validated_data.pop("user", {})
         if user_data:
-            user_serializer = UserUpdateSerializer(user, data=user_data, partial=True)
+            user_serializer = UserUpdateSerializer(
+                user, data=user_data, partial=True
+            )
             user_serializer.is_valid(raise_exception=True)
             user_serializer.save()
 
@@ -81,7 +114,14 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ("profile_picture", "bio", "website", "phone_number", "sex", "user")
+        fields = (
+            "profile_picture",
+            "bio",
+            "website",
+            "phone_number",
+            "sex",
+            "user",
+        )
 
     def create(self, validated_data):
         user = self.context["request"].user
@@ -91,7 +131,9 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 
 class FollowingSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    following = serializers.PrimaryKeyRelatedField(queryset=UserProfile.objects.all(), write_only=True, many=True)
+    following = serializers.PrimaryKeyRelatedField(
+        queryset=UserProfile.objects.all(), write_only=True, many=True
+    )
 
     class Meta:
         model = Follow
@@ -101,7 +143,7 @@ class FollowingSerializer(serializers.ModelSerializer):
         queryset = obj.following.all()
         data = [
             {
-                'first_name': user.user.first_name,
+                "first_name": user.user.first_name,
                 "last_name": user.user.last_name,
                 "email": user.user.email,
             }
@@ -126,7 +168,7 @@ class FollowerSerializer(serializers.ModelSerializer):
         queryset = obj.follower.all()
         data = [
             {
-                'first_name': user.user.first_name,
+                "first_name": user.user.first_name,
                 "last_name": user.user.last_name,
                 "email": user.user.email,
             }
